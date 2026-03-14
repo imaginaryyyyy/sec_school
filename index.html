@@ -8,6 +8,7 @@
         .view { display: none; }
         .active { display: block; }
         button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; }
+        .back-btn { background: #6c757d; }
         #chat-section { margin-top: 40px; border-top: 2px solid #0056b3; padding-top: 20px; }
     </style>
 </head>
@@ -15,90 +16,73 @@
 
 <div id="app">
     <h1>SG G3 AI Tutor</h1>
+    <div id="nav-controls"><button id="back-btn" class="back-btn" onclick="goBack()" style="display:none;">Back</button></div>
     
     <div id="view-level" class="view active">
         <h2>Select Level</h2>
-        <button onclick="selectLevel('Sec 1')">Sec 1</button>
-        <button onclick="selectLevel('Sec 2')">Sec 2</button>
-        <button onclick="selectLevel('Sec 3')">Sec 3</button>
-        <button onclick="selectLevel('Sec 4')">Sec 4</button>
+        <button onclick="navigate('subject', 'Sec 1')">Sec 1</button>
+        <button onclick="navigate('subject', 'Sec 2')">Sec 2</button>
+        <button onclick="navigate('subject', 'Sec 3')">Sec 3</button>
+        <button onclick="navigate('subject', 'Sec 4')">Sec 4</button>
     </div>
 
     <div id="view-subject" class="view">
-        <h2 id="level-title"></h2>
+        <h2 id="subject-header">Select Subject</h2>
         <div id="subject-list"></div>
     </div>
 
     <div id="view-topic" class="view">
-        <h2 id="subject-title"></h2>
+        <h2 id="topic-header">Select Topic</h2>
         <div id="topic-list"></div>
-    </div>
-
-    <div id="view-quiz" class="view">
-        <h2 id="quiz-title">Quiz Settings</h2>
-        <p>Select Difficulty:</p>
-        <button onclick="startQuiz('Easy')">Easy</button>
-        <button onclick="startQuiz('Medium')">Medium</button>
-        <button onclick="startQuiz('Hard')">Hard</button>
-    </div>
-
-    <div id="chat-section">
-        <h3>AI Tutor Assistant</h3>
-        <textarea id="chat-input" style="width:100%" placeholder="Ask the tutor a question..."></textarea>
-        <button onclick="askTutor()">Ask</button>
-        <div id="chat-response"></div>
     </div>
 </div>
 
 <script>
     const curriculum = {
-        'Sec 1': { 'Math': ['Algebra', 'Geometry', 'Statistics'], 'Science': ['Diversity', 'Models', 'Systems'] },
-        'Sec 2': { 'Math': ['Functions', 'Graphs', 'Matrices'], 'Science': ['Interactions', 'Energy', 'Forces'] },
-        'Sec 3': { 'EMath': ['Indices', 'Quadratic Equations'], 'AMath': ['Trigonometry', 'Calculus'], 'Physics': ['Kinematics', 'Dynamics'], 'Chemistry': ['Bonding', 'Mole Concept'], 'Computing': ['Data Representation', 'Algorithms'] },
-        'Sec 4': { 'EMath': ['Vectors', 'Probability'], 'AMath': ['Logarithms', 'Differentiation'], 'Physics': ['Electricity', 'Electromagnetism'], 'Chemistry': ['Redox', 'Organic Chemistry'], 'Computing': ['Networks', 'Security'] }
+        'Sec 1': { 
+            'Math': ['Numbers', 'Algebraic Expressions', 'Linear Equations', 'Functions and Graphs', 'Geometry', 'Statistics'],
+            'Science': ['Cells', 'Matter', 'Chemical Changes', 'Diversity of Organisms', 'Energy'] 
+        },
+        'Sec 2': { 
+            'Math': ['Expansion and Factorisation', 'Simultaneous Equations', 'Congruence and Similarity', 'Pythagoras Theorem', 'Mensuration'],
+            'Science': ['Human Digestive System', 'Transport System in Living Organisms', 'Light', 'Electricity', 'Chemical Reactions'] 
+        },
+        'Sec 3': {
+            'EMath': ['Indices', 'Quadratic Equations', 'Graphs of Functions', 'Trigonometry', 'Vectors'],
+            'AMath': ['Quadratic Functions', 'Equations and Inequalities', 'Surds', 'Polynomials', 'Coordinate Geometry'],
+            'Physics': ['Physical Quantities', 'Kinematics', 'Dynamics', 'Mass Weight Density', 'Turning Effects'],
+            'Chemistry': ['Kinetic Particle Theory', 'Atomic Structure', 'Chemical Bonding', 'Chemical Formulae', 'Acids and Bases'],
+            'Computing': ['Data Representation', 'Algorithms', 'Programming Fundamentals', 'Computer Systems']
+        },
+        'Sec 4': {
+            'EMath': ['Matrices', 'Probability', 'Statistics', 'Circle Properties', 'Construction'],
+            'AMath': ['Logarithms', 'Differentiation', 'Integration', 'Trigonometric Functions'],
+            'Physics': ['Electricity', 'Electromagnetism', 'Waves', 'Sound', 'Thermal Properties'],
+            'Chemistry': ['Redox Reactions', 'Periodic Table', 'Organic Chemistry', 'Energy Changes'],
+            'Computing': ['Networks', 'Security', 'Database Design']
+        }
     };
 
-    let state = { level: '', subject: '', topic: '' };
+    let historyStack = ['view-level'];
 
-    function showView(id) {
+    function navigate(viewId, data) {
+        historyStack.push('view-' + viewId);
+        showView('view-' + viewId, data);
+    }
+
+    function showView(id, data) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        document.getElementById('back-btn').style.display = (id === 'view-level') ? 'none' : 'block';
+        
+        // logic to populate menus...
+        console.log("Navigating to:", id, data);
     }
 
-    function selectLevel(lvl) {
-        state.level = lvl;
-        const container = document.getElementById('subject-list');
-        container.innerHTML = '';
-        Object.keys(curriculum[lvl]).forEach(sub => {
-            const btn = document.createElement('button');
-            btn.innerText = sub;
-            btn.onclick = () => { state.subject = sub; selectSubject(sub); };
-            container.appendChild(btn);
-        });
-        showView('view-subject');
-    }
-
-    function selectSubject(sub) {
-        const container = document.getElementById('topic-list');
-        container.innerHTML = '';
-        curriculum[state.level][sub].forEach(top => {
-            const btn = document.createElement('button');
-            btn.innerText = top;
-            btn.onclick = () => { state.topic = top; showView('view-quiz'); };
-            container.appendChild(btn);
-        });
-        showView('view-topic');
-    }
-
-    function startQuiz(diff) {
-        alert(`Generating 10 ${diff} questions for ${state.level} ${state.subject} - ${state.topic}`);
-        // API call logic would go here
-    }
-
-    async function askTutor() {
-        const question = document.getElementById('chat-input').value;
-        document.getElementById('chat-response').innerText = "Tutor is thinking...";
-        // Call your backend proxy here
+    function goBack() {
+        historyStack.pop();
+        const prev = historyStack[historyStack.length - 1];
+        showView(prev);
     }
 </script>
 </body>
