@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SG G3 AI Tutor</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .view { display: none; }
+        .active { display: block; }
+        button { padding: 12px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; }
+        #chat-section { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="view-level" class="view active">
+        <h2>Select Level</h2>
+        <button onclick="selectLevel('Sec 1')">Sec 1</button>
+        <button onclick="selectLevel('Sec 2')">Sec 2</button>
+        <button onclick="selectLevel('Sec 3')">Sec 3</button>
+        <button onclick="selectLevel('Sec 4')">Sec 4</button>
+    </div>
+
+    <div id="view-subject" class="view">
+        <h2 id="subject-title">Select Subject</h2>
+        <div id="subject-list"></div>
+    </div>
+
+    <div id="view-quiz" class="view">
+        <h2>Quiz Session</h2>
+        <div id="quiz-content">Loading questions based on MOE syllabus...</div>
+    </div>
+
+    <div id="chat-section">
+        <h3>AI Tutor Assistant</h3>
+        <textarea id="chat-input" style="width:100%" placeholder="Ask about the topic..."></textarea>
+        <button onclick="askTutor()">Ask Tutor</button>
+        <div id="chat-response"></div>
+    </div>
+</div>
+
+<script>
+    const GROQ_API_KEY = "YOUR_GROQ_API_KEY"; // Replace with your actual key
+
+    let state = { level: '', subject: '', topic: '' };
+
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    function selectLevel(lvl) {
+        state.level = lvl;
+        const list = document.getElementById('subject-list');
+        list.innerHTML = '';
+        const subjects = (lvl === 'Sec 1' || lvl === 'Sec 2') 
+            ? ['Math', 'Science'] 
+            : ['EMath', 'AMath', 'Physics', 'Chemistry', 'Computing'];
+        
+        subjects.forEach(sub => {
+            const btn = document.createElement('button');
+            btn.innerText = sub;
+            btn.onclick = () => { state.subject = sub; showView('view-quiz'); fetchQuiz(); };
+            list.appendChild(btn);
+        });
+        showView('view-subject');
+    }
+
+    async function fetchQuiz() {
+        const prompt = `Generate 10 questions for ${state.level} ${state.subject} based on MOE G3 syllabus.`;
+        // API call logic would go here
+        document.getElementById('quiz-content').innerText = "Simulated quiz generated for " + state.subject;
+    }
+
+    async function askTutor() {
+        const question = document.getElementById('chat-input').value;
+        const responseDiv = document.getElementById('chat-response');
+        responseDiv.innerText = "Thinking...";
+        // Call your AI API here
+        responseDiv.innerText = "The AI would respond here based on your prompt.";
+    }
+</script>
+</body>
+</html>
