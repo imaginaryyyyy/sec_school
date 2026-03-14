@@ -7,23 +7,22 @@
         body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
         .view { display: none; }
         .active { display: block; }
-        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; }
-        .back-btn { background: #6c757d; }
-        #chat-section { margin-top: 40px; border-top: 2px solid #0056b3; padding-top: 20px; }
+        button { padding: 12px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; display: block; width: 100%; text-align: left;}
+        .back-btn { background: #6c757d; width: auto; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <h1>SG G3 AI Tutor</h1>
-    <div id="nav-controls"><button id="back-btn" class="back-btn" onclick="goBack()" style="display:none;">Back</button></div>
+    <button id="back-btn" class="back-btn" onclick="goBack()" style="display:none;">← Back</button>
     
     <div id="view-level" class="view active">
         <h2>Select Level</h2>
-        <button onclick="navigate('subject', 'Sec 1')">Sec 1</button>
-        <button onclick="navigate('subject', 'Sec 2')">Sec 2</button>
-        <button onclick="navigate('subject', 'Sec 3')">Sec 3</button>
-        <button onclick="navigate('subject', 'Sec 4')">Sec 4</button>
+        <button onclick="showSubjects('Sec 1')">Sec 1</button>
+        <button onclick="showSubjects('Sec 2')">Sec 2</button>
+        <button onclick="showSubjects('Sec 3')">Sec 3</button>
+        <button onclick="showSubjects('Sec 4')">Sec 4</button>
     </div>
 
     <div id="view-subject" class="view">
@@ -39,49 +38,51 @@
 
 <script>
     const curriculum = {
-        'Sec 1': { 
-            'Math': ['Numbers', 'Algebraic Expressions', 'Linear Equations', 'Functions and Graphs', 'Geometry', 'Statistics'],
-            'Science': ['Cells', 'Matter', 'Chemical Changes', 'Diversity of Organisms', 'Energy'] 
-        },
-        'Sec 2': { 
-            'Math': ['Expansion and Factorisation', 'Simultaneous Equations', 'Congruence and Similarity', 'Pythagoras Theorem', 'Mensuration'],
-            'Science': ['Human Digestive System', 'Transport System in Living Organisms', 'Light', 'Electricity', 'Chemical Reactions'] 
-        },
-        'Sec 3': {
-            'EMath': ['Indices', 'Quadratic Equations', 'Graphs of Functions', 'Trigonometry', 'Vectors'],
-            'AMath': ['Quadratic Functions', 'Equations and Inequalities', 'Surds', 'Polynomials', 'Coordinate Geometry'],
-            'Physics': ['Physical Quantities', 'Kinematics', 'Dynamics', 'Mass Weight Density', 'Turning Effects'],
-            'Chemistry': ['Kinetic Particle Theory', 'Atomic Structure', 'Chemical Bonding', 'Chemical Formulae', 'Acids and Bases'],
-            'Computing': ['Data Representation', 'Algorithms', 'Programming Fundamentals', 'Computer Systems']
-        },
-        'Sec 4': {
-            'EMath': ['Matrices', 'Probability', 'Statistics', 'Circle Properties', 'Construction'],
-            'AMath': ['Logarithms', 'Differentiation', 'Integration', 'Trigonometric Functions'],
-            'Physics': ['Electricity', 'Electromagnetism', 'Waves', 'Sound', 'Thermal Properties'],
-            'Chemistry': ['Redox Reactions', 'Periodic Table', 'Organic Chemistry', 'Energy Changes'],
-            'Computing': ['Networks', 'Security', 'Database Design']
-        }
+        'Sec 1': { 'Math': ['Numbers', 'Algebra', 'Geometry', 'Statistics'], 'Science': ['Diversity', 'Models', 'Systems'] },
+        'Sec 2': { 'Math': ['Functions', 'Graphs', 'Matrices'], 'Science': ['Interactions', 'Energy', 'Forces'] },
+        'Sec 3': { 'EMath': ['Indices', 'Quadratic Equations'], 'AMath': ['Trigonometry', 'Calculus'], 'Physics': ['Kinematics', 'Dynamics'], 'Chemistry': ['Bonding', 'Mole Concept'], 'Computing': ['Data Representation', 'Algorithms'] },
+        'Sec 4': { 'EMath': ['Vectors', 'Probability'], 'AMath': ['Logarithms', 'Differentiation'], 'Physics': ['Electricity', 'Electromagnetism'], 'Chemistry': ['Redox', 'Organic Chemistry'], 'Computing': ['Networks', 'Security'] }
     };
 
     let historyStack = ['view-level'];
+    let selectedLevel = '', selectedSubject = '';
 
-    function navigate(viewId, data) {
-        historyStack.push('view-' + viewId);
-        showView('view-' + viewId, data);
-    }
-
-    function showView(id, data) {
+    function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('back-btn').style.display = (id === 'view-level') ? 'none' : 'block';
-        
-        // logic to populate menus...
-        console.log("Navigating to:", id, data);
+        historyStack.push(id);
+    }
+
+    function showSubjects(level) {
+        selectedLevel = level;
+        const list = document.getElementById('subject-list');
+        list.innerHTML = '';
+        Object.keys(curriculum[level]).forEach(sub => {
+            const btn = document.createElement('button');
+            btn.innerText = sub;
+            btn.onclick = () => showTopics(sub);
+            list.appendChild(btn);
+        });
+        showView('view-subject');
+    }
+
+    function showTopics(sub) {
+        selectedSubject = sub;
+        const list = document.getElementById('topic-list');
+        list.innerHTML = '';
+        curriculum[selectedLevel][sub].forEach(top => {
+            const btn = document.createElement('button');
+            btn.innerText = top;
+            btn.onclick = () => alert('Generating 10 questions for ' + top);
+            list.appendChild(btn);
+        });
+        showView('view-topic');
     }
 
     function goBack() {
-        historyStack.pop();
-        const prev = historyStack[historyStack.length - 1];
+        historyStack.pop(); // remove current
+        const prev = historyStack.pop(); // get previous
         showView(prev);
     }
 </script>
