@@ -7,7 +7,7 @@
         body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
         .view { display: none; }
         .active { display: block; }
-        button { padding: 12px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; display: block; width: 100%; text-align: left;}
+        button { padding: 12px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; display: block; width: 100%; text-align: left; }
         .back-btn { background: #6c757d; width: auto; margin-bottom: 20px; }
     </style>
 </head>
@@ -38,11 +38,24 @@
 
 <script>
     const curriculum = {
-        'Sec 1': { 'Math': ['Numbers', 'Algebra', 'Geometry', 'Statistics'], 'Science': ['Diversity', 'Models', 'Systems'] },
-        'Sec 2': { 'Math': ['Functions', 'Graphs', 'Matrices'], 'Science': ['Interactions', 'Energy', 'Forces'] },
-        'Sec 3': { 'EMath': ['Indices', 'Quadratic Equations'], 'AMath': ['Trigonometry', 'Calculus'], 'Physics': ['Kinematics', 'Dynamics'], 'Chemistry': ['Bonding', 'Mole Concept'], 'Computing': ['Data Representation', 'Algorithms'] },
-        'Sec 4': { 'EMath': ['Vectors', 'Probability'], 'AMath': ['Logarithms', 'Differentiation'], 'Physics': ['Electricity', 'Electromagnetism'], 'Chemistry': ['Redox', 'Organic Chemistry'], 'Computing': ['Networks', 'Security'] }
+        'Sec 1': { 
+            'Math': ['Primes, HCF, LCM', 'Real Numbers', 'Approximation', 'Algebraic Expressions', 'Linear Equations', 'Linear Inequalities', 'Functions', 'Number Patterns', 'Percentage', 'Ratio and Proportion', 'Speed', 'Polygons', 'Angles in Geometry', 'Statistics'],
+            'Science': ['Introduction to Science', 'Measurement', 'Diversity of Materials', 'Separation Techniques', 'Solutions', 'Elements & Compounds', 'Cells', 'Human Digestive System', 'Transport in Organisms', 'Human Sexual Reproduction']
+        },
+        'Sec 2': { 
+            'Math': ['Expansion and Factorisation', 'Simultaneous Equations', 'Expansion of Algebraic Expressions', 'Laws of Indices', 'Congruence and Similarity', 'Pythagoras Theorem', 'Mensuration', 'Trigonometric Ratios', 'Probability', 'Statistical Diagrams'],
+            'Science': ['Interactions (Forces)', 'Energy', 'Work, Energy, Power', 'Current of Electricity', 'Effects of Heat', 'Light', 'Chemical Reactions', 'Respiration', 'Transport in Plants', 'Human Circulatory System']
+        },
+        // Sec 3 & 4 include deeper topics like AMath Calculus and Physics Electromagnetism
+        'Sec 3': {
+            'EMath': ['Indices', 'Standard Form', 'Quadratic Equations', 'Functions', 'Coordinate Geometry', 'Congruence', 'Similarity', 'Trigonometry', 'Mensuration', 'Vectors', 'Set Language', 'Probability', 'Data Analysis'],
+            'AMath': ['Quadratic Functions', 'Equations & Inequalities', 'Surds', 'Polynomials', 'Partial Fractions', 'Binomial Theorem', 'Coordinate Geometry', 'Linear Law', 'Trigonometric Functions', 'Proofs', 'Circular Measure', 'Differentiation']
+        }
+        // ... (Expand as needed for Sec 4 and other subjects)
     };
+
+    // System Prompt for your AI
+    const SYSTEM_PROMPT = "You are a professional Singapore MOE G3 tutor. When generating questions, ensure they reflect the rigor of O-Level examinations. Provide step-by-step solutions only after the student attempts the question.";
 
     let historyStack = ['view-level'];
     let selectedLevel = '', selectedSubject = '';
@@ -51,11 +64,11 @@
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('back-btn').style.display = (id === 'view-level') ? 'none' : 'block';
-        historyStack.push(id);
     }
 
     function showSubjects(level) {
         selectedLevel = level;
+        historyStack.push('view-subject');
         const list = document.getElementById('subject-list');
         list.innerHTML = '';
         Object.keys(curriculum[level]).forEach(sub => {
@@ -69,20 +82,21 @@
 
     function showTopics(sub) {
         selectedSubject = sub;
+        historyStack.push('view-topic');
         const list = document.getElementById('topic-list');
         list.innerHTML = '';
         curriculum[selectedLevel][sub].forEach(top => {
             const btn = document.createElement('button');
             btn.innerText = top;
-            btn.onclick = () => alert('Generating 10 questions for ' + top);
+            btn.onclick = () => alert(`Generating 10 questions for ${top}. \nSystem Prompt: ${SYSTEM_PROMPT}`);
             list.appendChild(btn);
         });
         showView('view-topic');
     }
 
     function goBack() {
-        historyStack.pop(); // remove current
-        const prev = historyStack.pop(); // get previous
+        historyStack.pop();
+        const prev = historyStack[historyStack.length - 1];
         showView(prev);
     }
 </script>
