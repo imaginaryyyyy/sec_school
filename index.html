@@ -896,18 +896,37 @@ function restartQuiz() {
 const chatHistory = [];
 
 async function sendChat() {
-  const inputEl = document.getElementById('chat-input');
-  const msg = inputEl.value.trim();
-  if (!msg) return;
-  inputEl.value = '';
+  const input = document.getElementById('chat-input');
+  const chatBox = document.getElementById('chat-box');
+  const text = input.value.trim();
+  if(!text) return;
 
-  appendMsg('user', msg);
-  chatHistory.push({ role:'user', content:msg });
-
-  const chatBox  = document.getElementById('chat-box');
-  const tid      = 'typing-'+Date.now();
-  chatBox.innerHTML += `<div class="msg bot" id="${tid}"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  chatBox.innerHTML += `<div class="msg user"><div class="msg-bubble">${text}</div></div>`;
+  input.value = '';
+  
+  const tid = Date.now();
+  chatBox.innerHTML += `<div class="msg bot" id="${tid}"><div class="msg-bubble typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
   chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    // We fetch from our local relative path /api/chat
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    document.getElementById(tid).remove();
+    
+    // Groq's response structure remains the same
+    const reply = data.choices[0].message.content;
+    chatBox.innerHTML += `<div class="msg bot"><div class="msg-bubble">${reply}</div></div>`;
+  } catch(e) {
+    document.getElementById(tid).innerHTML = "Error: Check Vercel Logs.";
+  }
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
   const ctx = [
     state.level   ? `Level: Secondary ${state.level}` : '',
