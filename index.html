@@ -7,13 +7,15 @@
         body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
         .view { display: none; }
         .active { display: block; }
-        button { padding: 12px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; }
-        #chat-section { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; }
+        #chat-section { margin-top: 40px; border-top: 2px solid #0056b3; padding-top: 20px; }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <h1>SG G3 AI Tutor</h1>
+    
     <div id="view-level" class="view active">
         <h2>Select Level</h2>
         <button onclick="selectLevel('Sec 1')">Sec 1</button>
@@ -23,62 +25,80 @@
     </div>
 
     <div id="view-subject" class="view">
-        <h2 id="subject-title">Select Subject</h2>
+        <h2 id="level-title"></h2>
         <div id="subject-list"></div>
     </div>
 
+    <div id="view-topic" class="view">
+        <h2 id="subject-title"></h2>
+        <div id="topic-list"></div>
+    </div>
+
     <div id="view-quiz" class="view">
-        <h2>Quiz Session</h2>
-        <div id="quiz-content">Loading questions based on MOE syllabus...</div>
+        <h2 id="quiz-title">Quiz Settings</h2>
+        <p>Select Difficulty:</p>
+        <button onclick="startQuiz('Easy')">Easy</button>
+        <button onclick="startQuiz('Medium')">Medium</button>
+        <button onclick="startQuiz('Hard')">Hard</button>
     </div>
 
     <div id="chat-section">
         <h3>AI Tutor Assistant</h3>
-        <textarea id="chat-input" style="width:100%" placeholder="Ask about the topic..."></textarea>
-        <button onclick="askTutor()">Ask Tutor</button>
+        <textarea id="chat-input" style="width:100%" placeholder="Ask the tutor a question..."></textarea>
+        <button onclick="askTutor()">Ask</button>
         <div id="chat-response"></div>
     </div>
 </div>
 
 <script>
-    const GROQ_API_KEY = "YOUR_GROQ_API_KEY"; // Replace with your actual key
+    const curriculum = {
+        'Sec 1': { 'Math': ['Algebra', 'Geometry', 'Statistics'], 'Science': ['Diversity', 'Models', 'Systems'] },
+        'Sec 2': { 'Math': ['Functions', 'Graphs', 'Matrices'], 'Science': ['Interactions', 'Energy', 'Forces'] },
+        'Sec 3': { 'EMath': ['Indices', 'Quadratic Equations'], 'AMath': ['Trigonometry', 'Calculus'], 'Physics': ['Kinematics', 'Dynamics'], 'Chemistry': ['Bonding', 'Mole Concept'], 'Computing': ['Data Representation', 'Algorithms'] },
+        'Sec 4': { 'EMath': ['Vectors', 'Probability'], 'AMath': ['Logarithms', 'Differentiation'], 'Physics': ['Electricity', 'Electromagnetism'], 'Chemistry': ['Redox', 'Organic Chemistry'], 'Computing': ['Networks', 'Security'] }
+    };
 
     let state = { level: '', subject: '', topic: '' };
 
-    function showView(viewId) {
+    function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
+        document.getElementById(id).classList.add('active');
     }
 
     function selectLevel(lvl) {
         state.level = lvl;
-        const list = document.getElementById('subject-list');
-        list.innerHTML = '';
-        const subjects = (lvl === 'Sec 1' || lvl === 'Sec 2') 
-            ? ['Math', 'Science'] 
-            : ['EMath', 'AMath', 'Physics', 'Chemistry', 'Computing'];
-        
-        subjects.forEach(sub => {
+        const container = document.getElementById('subject-list');
+        container.innerHTML = '';
+        Object.keys(curriculum[lvl]).forEach(sub => {
             const btn = document.createElement('button');
             btn.innerText = sub;
-            btn.onclick = () => { state.subject = sub; showView('view-quiz'); fetchQuiz(); };
-            list.appendChild(btn);
+            btn.onclick = () => { state.subject = sub; selectSubject(sub); };
+            container.appendChild(btn);
         });
         showView('view-subject');
     }
 
-    async function fetchQuiz() {
-        const prompt = `Generate 10 questions for ${state.level} ${state.subject} based on MOE G3 syllabus.`;
+    function selectSubject(sub) {
+        const container = document.getElementById('topic-list');
+        container.innerHTML = '';
+        curriculum[state.level][sub].forEach(top => {
+            const btn = document.createElement('button');
+            btn.innerText = top;
+            btn.onclick = () => { state.topic = top; showView('view-quiz'); };
+            container.appendChild(btn);
+        });
+        showView('view-topic');
+    }
+
+    function startQuiz(diff) {
+        alert(`Generating 10 ${diff} questions for ${state.level} ${state.subject} - ${state.topic}`);
         // API call logic would go here
-        document.getElementById('quiz-content').innerText = "Simulated quiz generated for " + state.subject;
     }
 
     async function askTutor() {
         const question = document.getElementById('chat-input').value;
-        const responseDiv = document.getElementById('chat-response');
-        responseDiv.innerText = "Thinking...";
-        // Call your AI API here
-        responseDiv.innerText = "The AI would respond here based on your prompt.";
+        document.getElementById('chat-response').innerText = "Tutor is thinking...";
+        // Call your backend proxy here
     }
 </script>
 </body>
