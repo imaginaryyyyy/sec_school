@@ -895,36 +895,70 @@ function restartQuiz() {
 ══════════════════════════════════════════ */
 const chatHistory = [];
 
+/* ══════════════════════════════════════════
+   AI TUTOR ACTIONS
+══════════════════════════════════════════ */
+
 async function sendChat() {
   const input = document.getElementById('chat-input');
   const chatBox = document.getElementById('chat-box');
   const text = input.value.trim();
-  if(!text) return;
 
-  chatBox.innerHTML += `<div class="msg user"><div class="msg-bubble">${text}</div></div>`;
-  input.value = '';
+  // 1. Don't do anything if the input is empty
+  if (!text) return;
+
+  // 2. Add the user's message to the UI
+  chatBox.innerHTML += `
+    <div class="msg user">
+      <div class="msg-bubble">${text}</div>
+    </div>`;
   
-  const tid = Date.now();
-  chatBox.innerHTML += `<div class="msg bot" id="${tid}"><div class="msg-bubble typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  // Clear input and scroll to bottom
+  input.value = '';
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // 3. Add a temporary "typing..." indicator
+  const tempId = "loading-" + Date.now();
+  chatBox.innerHTML += `
+    <div class="msg bot" id="${tempId}">
+      <div class="msg-bubble typing">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>`;
   chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    // We fetch from our local relative path /api/chat
-    const res = await fetch("/api/chat", {
+    // 4. Call your NEW Vercel Serverless Function
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
     });
 
-    const data = await res.json();
-    document.getElementById(tid).remove();
+    const data = await response.json();
     
-    // Groq's response structure remains the same
-    const reply = data.choices[0].message.content;
-    chatBox.innerHTML += `<div class="msg bot"><div class="msg-bubble">${reply}</div></div>`;
-  } catch(e) {
-    document.getElementById(tid).innerHTML = "Error: Check Vercel Logs.";
+    // Remove the typing indicator
+    document.getElementById(tempId).remove();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    // 5. Display the AI's response
+    const aiReply = data.choices[0].message.content;
+    chatBox.innerHTML += `
+      <div class="msg bot">
+        <div class="msg-bubble">${aiReply}</div>
+      </div>`;
+
+  } catch (error) {
+    console.error("Chat Error:", error);
+    document.getElementById(tempId).innerHTML = `
+      <div class="msg-bubble" style="color: var(--red)">
+        ⚠️ Error: Could not reach the tutor.
+      </div>`;
   }
+
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
